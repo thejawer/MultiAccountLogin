@@ -6,11 +6,21 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         console.log(sender)
         const targetDomain = getRootDomain(sender.tab.url)
         console.log('root domain url: '+targetDomain)
-        const cookies = await getAllCookies(targetDomain);
-        await removeCookie(cookies);
+        let domains = []
+        if (targetDomain.includes('dianping.com') || targetDomain.includes('meituan.com')) {
+            domains = ['meituan.com','dianping.com'];
+        } else {
+            domains = [targetDomain];
+        }
 
-        console.log("clear Cookies")
-        chrome.tabs.reload(sender.tab.id);
+        Promise.all(domains.map(async (targetDomain) => {
+            const cookies = await getAllCookies(targetDomain);
+            await removeCookie(cookies);
+        }))
+        .then(() => {
+            chrome.tabs.reload(sender.tab.id);
+        });
+
 
     }
 
@@ -53,6 +63,8 @@ async function getAllCookies(domain) {
 
 function getRootDomain(url) {
 
+    const domains = [];
+
     const domain = new URL(url).hostname 
     const parts = domain.split('.').reverse()
 
@@ -65,5 +77,8 @@ function getRootDomain(url) {
         return parts[1] + '.' + parts[0]
     }
 }
+
+
+
 
 

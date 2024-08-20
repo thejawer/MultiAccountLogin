@@ -11,7 +11,7 @@ button.style.border = 'none';
 button.style.borderRadius = '5px';
 button.style.padding = '0.5px 1px';
 button.style.cursor = 'pointer';
-button.style.zIndex = 1; 
+button.style.zIndex = 9999999; 
 
 // Append button to the body
 document.body.appendChild(button);
