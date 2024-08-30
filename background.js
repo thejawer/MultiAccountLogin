@@ -3,7 +3,6 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
 
     if (message.action === "clearCookies") {
-        console.log(sender)
         const targetDomain = getRootDomain(sender.tab.url)
         console.log('root domain url: '+targetDomain)
         let domains = []
@@ -15,12 +14,11 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
         Promise.all(domains.map(async (targetDomain) => {
             const cookies = await getAllCookies(targetDomain);
-            await removeCookie(cookies);
+            await removeCookie(cookies); 
         }))
         .then(() => {
             chrome.tabs.reload(sender.tab.id);
         });
-
 
     }
 
@@ -30,14 +28,14 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
 
 async function removeCookie(cookies) {
+    const partitionKey = {};
     return cookies.map(async (cookie) => {
         const { name, domain, storeId } = cookie;
         const url = 'http' + (cookie.secure ? 's' : '') + '://' + domain;
 
         console.log(`%c removed cookie ${cookie} named ${name} domain ${domain} storeId ${storeId}.`, 'background: #00ff00; color: #000');
 
-        const result = await chrome.cookies.remove({ url, name, storeId });
-        // await Promise.all(result);
+        const result = await chrome.cookies.remove({url, name, storeId, partitionKey});
 
         if (!result) {
             console.error(`%c Failed to remove cookie named ${name} from ${url}.`, 'background: #ff0000; color: #fff');
@@ -50,10 +48,12 @@ async function removeCookie(cookies) {
 // Async function to get all cookies for a specific domain
 async function getAllCookies(domain) {
     return new Promise((resolve, reject) => {
-        chrome.cookies.getAll({ domain: domain }, (cookies) => {
+        const partitionKey = {}
+        chrome.cookies.getAll({ domain: domain, partitionKey: partitionKey}, (cookies) => {
             if (chrome.runtime.lastError) {
                 reject(chrome.runtime.lastError);
             } else {
+                console.log('cookies:' +cookies);
                 resolve(cookies);
             }
         });
